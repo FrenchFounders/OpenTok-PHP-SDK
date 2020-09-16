@@ -23,6 +23,8 @@ class Validators
     static $guidRegEx = '/^\[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\$/';
     static $archiveSchemaUri;
     static $broadcastSchemaUri;
+    static $broadcastListSchemaUri;
+
 
     public static function validateApiKey($apiKey)
     {
@@ -267,6 +269,20 @@ class Validators
             );
         }
     }
+    public static function validateBroadcastListData($broadcastListData)
+    {
+        if (!self::$broadcastListSchemaUri) { self::$broadcastListSchemaUri = __DIR__.'/broadcastlist-schema.json'; }
+        $document = new Document();
+        // have to do a encode+decode so that json objects decoded as arrays from Guzzle
+        // are re-encoded as objects instead
+        $document->loadData(json_decode(json_encode($broadcastListData)));
+        $document->loadSchema(self::$broadcastListSchemaUri);
+        if (!$document->validate()) {
+            throw new InvalidArgumentException(
+                'The broadcast data provided is not valid. Errors:'.$document->lastError.' broadcastData:'.print_r($broadcastListData, true)
+            );
+        }
+    }
     public static function validateLayout($layout)
     {
         if (!($layout instanceof Layout)) {
@@ -306,7 +322,7 @@ class Validators
             throw new InvalidArgumentException('Each element in the streamClassArray must have a layoutClassList array.');
         }
         if (!is_array($layoutClassList['layoutClassList'])) {
-            throw new InvalidArgumentException('Each element in the layoutClassList array must be a string (defining class names).');            
+            throw new InvalidArgumentException('Each element in the layoutClassList array must be a string (defining class names).');
         }
     }
 

@@ -96,7 +96,7 @@ class OpenTok {
      *    describing the end-user. For example, you can pass the user ID, name, or other data
      *    describing the end-user. The length of the string is limited to 1000 characters.
      *    This data cannot be updated once it is set.</li>
-     *    
+     *
      *    <li><code>initialLayoutClassList</code> (array) &mdash; An array of class names (strings)
      *      to be used as the initial layout classes for streams published by the client. Layout
      *      classes are used in customizing the layout of videos in
@@ -310,7 +310,7 @@ class OpenTok {
         if (!is_array($options)) {
             $options = array('name' => $options);
         }
-        
+
         // unpack optional arguments (merging with default values) into named variables
         $defaults = array(
             'name' => null,
@@ -414,7 +414,7 @@ class OpenTok {
      * archives returned is 1000.
      * @param string $sessionId Optional. The OpenTok session Id for which you want to retrieve Archives for. If no session Id
      * is specified, the method will return archives from all sessions created with the API key.
-     * 
+     *
      * @return ArchiveList An ArchiveList object. Call the items() method of the ArchiveList object
      * to return an array of Archive objects.
      */
@@ -443,7 +443,7 @@ class OpenTok {
     {
         Validators::validateArchiveId($archiveId);
         Validators::validateLayout($layoutType);
-        
+
         $this->client->setArchiveLayout($archiveId, $layoutType);
     }
 
@@ -462,14 +462,14 @@ class OpenTok {
     public function setStreamClassLists($sessionId, $classListArray=array())
     {
         Validators::validateSessionIdBelongsToKey($sessionId, $this->apiKey);
-        
+
         foreach ($classListArray as $item ){
-            Validators::validateLayoutClassListItem($item);            
+            Validators::validateLayoutClassListItem($item);
         }
-        
+
         $this->client->setStreamClassLists($sessionId, $classListArray);
     }
-    
+
 
     /**
      * Disconnects a specific client from an OpenTok session.
@@ -485,6 +485,33 @@ class OpenTok {
         Validators::validateConnectionId($connectionId);
 
         return $this->client->forceDisconnect($sessionId, $connectionId);
+    }
+
+    /**
+     * Returns an BroadcastList. The <code>items()</code> method of this object returns a list of
+     * broadcasts that are completed and in-progress, for your API key.
+     *
+     * @param integer $offset Optional. The index offset of the first broadcast. 0 is offset of the
+     * most recently started broadcast. 1 is the offset of the broadcast that started prior to the most
+     * recent broadcast. If you do not specify an offset, 0 is used.
+     * @param integer $count Optional. The number of broadcasts to be returned. The maximum number of
+     * broadcasts returned is 1000.
+     * @param string $sessionId Optional. The OpenTok session ID for which you want to retrieve broadcasts. If no session ID
+     * is specified, the method will return broadcasts from all sessions created with the API key.
+     *
+     * @return BroadcastList A BroadcastList object. Call the <code>items()</code> method of the BroadcastList object
+     * to return an array of Broadcast objects.
+     */
+    public function listBroadcasts($offset=0, $count=null, $sessionId=null)
+    {
+        // validate params
+        Validators::validateOffsetAndCount($offset, $count);
+        if (!is_null($sessionId)) {
+            Validators::validateSessionIdBelongsToKey($sessionId, $this->apiKey);
+        }
+
+        $broadcastListData = $this->client->listBroadcasts($offset, $count, $sessionId);
+        return new BroadcastList($broadcastListData, array( 'client' => $this->client ));
     }
 
     /**
@@ -642,9 +669,9 @@ class OpenTok {
 
     /**
      * Gets an Stream object, providing information on a given stream.
-     * 
+     *
      * @param String $sessionId The session ID for the OpenTok session containing the stream.
-     * 
+     *
      * @param String $streamId The stream ID.
      *
      * @return Stream The Stream object.
@@ -654,30 +681,30 @@ class OpenTok {
     {
         Validators::validateSessionId($sessionId);
         Validators::validateStreamId($streamId);
-      
+
         // make API call
         $streamData = $this->client->getStream($sessionId, $streamId);
         return new Stream($streamData);
-        
+
     }
 
     /**
      * Returns a StreamList Object for the given session ID.
-     * 
+     *
      * @param String $sessionId The session ID.
      *
      * @return StreamList A StreamList object. Call the items() method of the StreamList object
-     * to return an array of Stream objects.     
+     * to return an array of Stream objects.
      */
 
     public function listStreams($sessionId)
     {
         Validators::validateSessionIdBelongsToKey($sessionId, $this->apiKey);
-      
+
         // make API call
         $streamListData = $this->client->listStreams($sessionId);
         return new StreamList($streamListData);
-    
+
     }
 
     /**
@@ -795,7 +822,7 @@ class OpenTok {
      *
      * </ul>
      *
-     * 
+     *
      * @param string $connectionId An optional parameter used to send the signal to a specific connection in a session.
      */
     public function signal($sessionId, $payload, $connectionId=null)
@@ -806,19 +833,19 @@ class OpenTok {
             'type' => '',
             'data' => '',
         );
-        
+
         $payload = array_merge($defaults, array_intersect_key($payload, $defaults));
         list($type, $data) = array_values($payload);
 
         // validate arguments
         Validators::validateSessionIdBelongsToKey($sessionId, $this->apiKey);
         Validators::validateSignalPayload($payload);
-        
+
         if (is_null($connectionId) || empty($connectionId)) {
             // make API call without connectionId
             $this->client->signal($sessionId, $payload);
         } else {
-            Validators::validateConnectionId($connectionId); 
+            Validators::validateConnectionId($connectionId);
             // make API call with connectionId
             $this->client->signal($sessionId, $payload, $connectionId);
         }
